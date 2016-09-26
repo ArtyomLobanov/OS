@@ -4,6 +4,7 @@
 #include <ioport.h>
 #include <idt_init.h>
 #include <PIC.h>
+#include <PIT.h>
 #include <serial.h>
 
 
@@ -12,16 +13,7 @@ void generate();
 void sti_command();
 void cli_command();
 
-void PIT_init() {
-	out8(0x43, (2 << 1) | (3 << 4));
-	out8(0x40, (1 << 8) - 1);
-	out8(0x40, (1 << 8) - 1);    
-	out8(0x21, ((1 << 7) - 1) << 1);
-}
-
-
 void main(void) {
-	serial_init();
 	idt_init();
 	print("Hello, World!\n");
 	cli_command();

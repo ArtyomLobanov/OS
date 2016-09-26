@@ -1,22 +1,26 @@
 #include <ioport.h>
- 
-unsigned short x = 0x3f8;
+#define SERIAL_BASE_PORT 0x3f8
+
+static int ready = 0;
 
 void serial_init() {
-	out8(x+1, 0);
-	out8(x+3, (1 << 7));
-	out8(x+0, 1);
-	out8(x+1, 0);
-	out8(x+3, 0);
+	ready = 1;
+	out8(SERIAL_BASE_PORT+1, 0);
+	out8(SERIAL_BASE_PORT+3, (1 << 7));
+	out8(SERIAL_BASE_PORT+0, 1);
+	out8(SERIAL_BASE_PORT+1, 0);
+	out8(SERIAL_BASE_PORT+3, 0);
 	
 }
 
 void printChar(char c) {
-	uint8_t check = in8(x + 5);
+	if (!ready)
+		serial_init();
+	uint8_t check = in8(SERIAL_BASE_PORT + 5);
 	while (((check >> 5) & 1) == 0) {
-		check = in8(x + 5);
+		check = in8(SERIAL_BASE_PORT + 5);
 	}
-	out8(x+0, c);
+	out8(SERIAL_BASE_PORT+0, c);
 }
 
 void print(char* m) {

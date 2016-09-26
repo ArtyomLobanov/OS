@@ -36,7 +36,7 @@ void load_idt_item(unsigned char* place, void (*f)()) {
 	place[15] = 0;
 }
 
-void work(int n) {
+void handle_interrupt(int n) {
 	print("Work with interupt №");
 	printInt(n);
 	print("\n");

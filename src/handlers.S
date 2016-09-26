@@ -1,6 +1,6 @@
 //;.section .bootstrap, "ax"
 .code64
-.extern work
+.extern handle_interrupt
 .global flag
 .global generate
 .global cli_command
@@ -41,7 +41,7 @@ push %R13; \
 push %R14; \
 push %R15; \
 movq $ ## i, %rdi; \
-call work; \
+call handle_interrupt; \
 pop %R15; \
 pop %R14; \
 pop %R13; \
@@ -77,7 +77,7 @@ push %R13; \
 push %R14; \
 push %R15; \
 movq $ ## i, %rdi; \
-call work; \
+call handle_interrupt; \
 pop %R15; \
 pop %R14; \
 pop %R13; \
