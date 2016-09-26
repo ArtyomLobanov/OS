@@ -88,6 +88,16 @@ void work(int n) {
 	if (n >= 40) {
 		slave_EOI();
 	}
+	if (n == 32) {
+		print("Timer calling\n");
+	}
+}
+
+void PIT_init() {
+	out8(0x43, (2 << 1) | (3 << 4));
+	out8(0x40, (1 << 8) - 1);
+	out8(0x40, (1 << 8) - 1);    
+	out8(0x21, ((1 << 7) - 1) << 1);
 }
 
 
@@ -100,6 +110,7 @@ void main(void) {
 	generate();
 	PIC_init();
 	sti_command();
+	PIT_init();
 	print("I'm here!\n");
 	print("I'm here! again\n");
 	while (1);
