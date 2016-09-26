@@ -16,7 +16,7 @@ sti
 ret
 
 generate:
-//int $40
+int $40
 ret
 
 trash:
