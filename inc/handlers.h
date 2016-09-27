@@ -1,3 +1,9 @@
+#ifndef __HANDLERS_H__
+#define __HANDLERS_H__
+
+void cli_command();
+void sti_command();
+
 void handler_0();
 void handler_1();
 void handler_2();
@@ -254,4 +260,4 @@ void handler_252();
 void handler_253();
 void handler_254();
 void handler_255();
-void handler_256();
+#endif

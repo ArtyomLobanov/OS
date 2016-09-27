@@ -1,7 +1,6 @@
 //;.section .bootstrap, "ax"
 .code64
 .extern handle_interrupt
-.global flag
 .global generate
 .global cli_command
 .global sti_command

@@ -10,18 +10,21 @@
 
 
 void generate();
-void sti_command();
-void cli_command();
+
+void foo(int n) {
+	n++;
+	print("Timer works!\n");
+}
+
 
 void main(void) {
+	cli_command();
 	idt_init();
 	print("Hello, World!\n");
-	cli_command();
 	generate();
 	PIC_init();
 	sti_command();
-	PIT_init();
-	print("I'm here!\n");
-	print("I'm here! again\n");
+	PIT_init(foo);
+	print("\nThe End!\n");
 	while (1);
 }

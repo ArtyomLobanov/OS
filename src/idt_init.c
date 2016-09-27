@@ -11,6 +11,7 @@ unsigned long long byte_mask = (1 << 8) - 1;
 unsigned long long magic_for_idt = (1 << 15) + (14 << 8);
 struct desc_table_ptr ptr_idt = {0, 0};
 unsigned char idt[16 * 256];
+void (*listeners[256])(int n);
 
 unsigned char get_byte(unsigned long long value, int n) {
 	return (value >> (n * 8)) & byte_mask;
@@ -36,6 +37,10 @@ void load_idt_item(unsigned char* place, void (*f)()) {
 	place[15] = 0;
 }
 
+void set_listener(int iterrupt_number, void (*f)(int)) {
+	listeners[iterrupt_number] = f;
+}
+
 void handle_interrupt(int n) {
 	print("Work with interupt №");
 	printInt(n);
@@ -46,8 +51,8 @@ void handle_interrupt(int n) {
 	if (n >= 40) {
 		slave_EOI();
 	}
-	if (n == 32) {
-		print("Timer calling\n");
+	if (listeners[n] != 0) {
+		listeners[n](n);
 	}
 }
 
@@ -55,6 +60,9 @@ void ld_all();
 
 void idt_init() {
 	ld_all();
+	for (int i = 0; i < 256; i++) {
+		listeners[i] = 0;
+	}
 	ptr_idt.size = 256 * 16 - 1;
 	ptr_idt.addr = (unsigned long long)(&idt);
 	write_idtr(&ptr_idt);
