@@ -48,7 +48,7 @@ void handle_interrupt(int n) {
 	if (n >= 32 && n < 48) {
 		master_EOI();
 	}
-	if (n >= 40) {
+	if (n >= 40 && n < 48) {
 		slave_EOI();
 	}
 	if (listeners[n] != 0) {
