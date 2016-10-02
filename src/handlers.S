@@ -40,6 +40,7 @@ push %R13; \
 push %R14; \
 push %R15; \
 movq $ ## i, %rdi; \
+cld;\
 call handle_interrupt; \
 pop %R15; \
 pop %R14; \
@@ -76,6 +77,7 @@ push %R13; \
 push %R14; \
 push %R15; \
 movq $ ## i, %rdi; \
+cld;\
 call handle_interrupt; \
 pop %R15; \
 pop %R14; \

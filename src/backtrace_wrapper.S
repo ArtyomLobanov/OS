@@ -5,5 +5,6 @@
 
 backtrace:
 movq %rbp, %rdi
+cld
 call print_backtrace
 ret
