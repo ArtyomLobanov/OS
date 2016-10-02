@@ -7,6 +7,6 @@ void printChar(char c);
 
 void print(char* m);
 
-void printInt(int c);
+void printInt(unsigned long long c);
 	
 #endif

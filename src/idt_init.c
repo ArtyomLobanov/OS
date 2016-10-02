@@ -42,7 +42,7 @@ void set_listener(int iterrupt_number, void (*f)(int)) {
 }
 
 void handle_interrupt(int n) {
-	print("Work with interupt №");
+	print("Work with interrupt №");
 	printInt(n);
 	print("\n");
 	if (n >= 32 && n < 48) {

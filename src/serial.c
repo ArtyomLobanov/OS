@@ -30,13 +30,13 @@ void print(char* m) {
 	}
 }
 
-void printInt(int c) {
-	char buf[19];
-	for (int i = 0; i < 18; i++) {
+void printInt(unsigned long long c) {
+	char buf[20];
+	for (int i = 0; i < 20; i++) {
 		buf[i] = c%10;
 		c /= 10;
 	} 
-	for (int i = 17; i >= 0; i--) {
+	for (int i = 19; i >= 0; i--) {
 		printChar('0' + buf[i]);
 	}
 }

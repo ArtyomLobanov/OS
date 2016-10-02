@@ -218,6 +218,7 @@ enable_paging:
 
 
 	.code64
+.global start64
 start64:
 	lgdt gdt_ptr64
 	movabsq $bootstrap_stack_top, %rax
@@ -236,6 +237,7 @@ start64:
 	.bss
 	.align PAGE_SIZE
 	.space PAGE_SIZE
+.global bootstrap_stack_top
 bootstrap_stack_top:
 	.align PAGE_SIZE
 bootstrap_pml4:
