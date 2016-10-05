@@ -2,7 +2,20 @@
 
 extern unsigned long long bootstrap_stack_top;
 
+
+int check_rbp(unsigned long long* rbp) {
+	while((unsigned long long) rbp >= bootstrap_stack_top) {
+		if ((unsigned long long) rbp >= *rbp && *rbp >= bootstrap_stack_top)
+			return 0;
+		rbp = (unsigned long long*) (*rbp);
+	}
+	return 1;
+}
 void print_backtrace(unsigned long long* rbp) {
+	if (!check_rbp(rbp)) {
+		printf("Error: invalid rbp\n");
+		return;
+	}
 	printf("Backtrace:\n the currently executing function\n");
 	int flag = 0;
 	while ((unsigned long long) rbp >= bootstrap_stack_top) {
@@ -12,5 +25,6 @@ void print_backtrace(unsigned long long* rbp) {
 	}
 	printf("\n");
 }
+
 	
 
