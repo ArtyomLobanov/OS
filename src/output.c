@@ -1,8 +1,7 @@
 #include <serial.h>
 #include <stdarg.h>
 #include <stddef.h>
-
-#define unused(arg) if (&arg == &arg + 1){}
+#include "output.h"
 
 #define ORDINARY_SYMBOL 0
 #define STRING 1
@@ -57,6 +56,12 @@ void write(const char* string, struct Stream* stream) {
 
 void write_uint(unsigned long long value, int radix, struct Stream* stream) {
 	static char* digits = "0123456789ABCDEF";
+	if (radix == 16) {
+		write("0x", stream);
+	}
+	if (radix == 2) {
+		write("0b", stream);
+	}
 	if (value == 0) {
 		write_char('0', stream);
 		return;
@@ -80,6 +85,68 @@ void write_int(long long value, int radix, struct Stream* stream) {
 	if (value < 0)
 		write_char('-', stream);
 	write_uint(abs(value), radix, stream);
+}
+
+int ptr_shift(int t) {
+	if (t == _DESCRIPTION_UCHAR || t == _DESCRIPTION_CHAR) return 1;
+	if (t == _DESCRIPTION_USHORT || t == _DESCRIPTION_SHORT) return 2;
+	if (t == _DESCRIPTION_UINT || t == _DESCRIPTION_INT) return 4;
+	if (t == _DESCRIPTION_ULONG || t == _DESCRIPTION_LONG || t == _DESCRIPTION_STRING) return 8;
+	return 0;
+}
+
+#define STRUCT_STYLE 0
+#define CLASS_STYLE 1
+void write_struct(struct_description_t *ptr, int template, struct Stream* stream) {
+	char* internal_ptr = (char*) ptr-> ptr;
+	write("Struct ", stream);
+	write(ptr->name, stream);
+	write(" (at ", stream);
+	write_uint((unsigned long long) ptr->ptr, 16, stream);
+	write(") {", stream);
+	if (template == CLASS_STYLE) write_char('\n', stream);
+	for (int i = 0; i < ptr->fields_counter; i++) {
+		int pr = (template == CLASS_STYLE? 8:1);
+		if (ptr->prefix != 0) pr = ptr->prefix(ptr->ptr, i);
+		if (pr < 0) {
+			internal_ptr += ptr_shift(ptr->types[i]);
+			continue;
+		}
+		for (int j = 0; j < pr; j++) {
+			write_char(' ', stream);
+		}
+		write(ptr->fields[i], stream);
+		if (ptr->types[i] != _DESCRIPTION_NOTHING)
+			write(template == CLASS_STYLE? " = " : "=", stream);
+		if (ptr->types[i] == _DESCRIPTION_CHAR) {
+			write_int(*((signed char*) internal_ptr), 16, stream);
+		} else if (ptr->types[i] == _DESCRIPTION_UCHAR) {
+			write_uint(*((unsigned char*) internal_ptr), 16, stream);
+		} else if (ptr->types[i] == _DESCRIPTION_SHORT) {
+			write_int(*((short*) internal_ptr), 16, stream);
+		} else if (ptr->types[i] == _DESCRIPTION_USHORT) {
+			write_uint(*((unsigned short*) internal_ptr), 16, stream);
+		} else if (ptr->types[i] == _DESCRIPTION_INT) {
+			write_int(*((int*) internal_ptr), 16, stream);
+		} else if (ptr->types[i] == _DESCRIPTION_UINT) {
+			write_uint(*((unsigned int*) internal_ptr), 16, stream);
+		} else if (ptr->types[i] == _DESCRIPTION_LONG) {
+			write_int(*((long long*) internal_ptr), 16, stream);
+		} else if (ptr->types[i] == _DESCRIPTION_ULONG) {
+			write_uint(*((unsigned long long*) internal_ptr), 16, stream);
+		} else if (ptr->types[i] == _DESCRIPTION_STRING) {
+			write("\"", stream);
+			unsigned long long addr = *((unsigned long long*) internal_ptr);
+			write((const char*) addr, stream);
+			write("\"", stream);
+		}
+		internal_ptr += ptr_shift(ptr->types[i]);
+		if (ptr->types[i] != _DESCRIPTION_NOTHING)
+			write_char(template == CLASS_STYLE? ';':',', stream);
+		if (template == CLASS_STYLE) write_char('\n', stream);
+
+	}
+	write("}\n", stream);
 }
 
 void writef(const char* s, va_list args, struct Stream* stream) {
@@ -156,6 +223,12 @@ void writef(const char* s, va_list args, struct Stream* stream) {
 		} else if (begins_with(s, "llx")) {
 			write_uint(va_arg(args, unsigned long long), 16, stream);	
 			s += 3;
+		} else if (begins_with(s, "ms")) {
+			write_struct(va_arg(args, struct_description_t*), STRUCT_STYLE, stream);	
+			s += 2;
+		} else if (begins_with(s, "mc")) {
+			write_struct(va_arg(args, struct_description_t*), CLASS_STYLE, stream);	
+			s += 2;
 		}
 
 	}
@@ -193,4 +266,5 @@ int printf(const char* fmt, ...) {
 	
 	return res;
 }
+
 
