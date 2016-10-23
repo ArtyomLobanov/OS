@@ -9,7 +9,31 @@
 #include <output.h>
 #include <backtrace.h>
 #include <memory_map.h>
+#include "buddy_alloc.h"
+#include <memory.h>
 
+
+void memory_alloc_test() {
+	printf("\n---------memory tests-------\n");
+	status();
+	unsigned long long addrs[5];
+	unsigned long long sizes[5] = {1, 14, 5235, 10000, 1325345342};
+
+	for (int i = 0; i < 5; i++) {
+		addrs[i] = ggmpom(sizes[i]);
+		printf("%u) alloc memory test: size = %u, get adress = %u (= %u mod PAGE_SIZE)\n", (i+1), 
+			sizes[i], addrs[i], addrs[i] % PAGE_SIZE);
+		status();
+		printf("\n");
+	}	
+
+	for (int i = 0; i < 5; i++) {
+		printf("%u) free memory test: size = %u, address = %u\n", (i+1), sizes[i], addrs[i]);
+		gttpom(addrs[i]);
+		status();
+		printf("\n");
+	}
+}
 
 void main() {
 	cli_command();
@@ -22,6 +46,8 @@ void main() {
 	print_default_memory_map();
 	printf("\n\n\n-------new_memory_map is---------\n");
 	print_actual_memory_map();
-	//printf("%ms", &header_descriptor(get_initial_multiboot_header()));
+	
+	memory_alloc_test();
+	
 	while (1);
 }
