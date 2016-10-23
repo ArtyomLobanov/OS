@@ -113,10 +113,4 @@ struct multiboot_mod_list {
 };
 typedef struct multiboot_mod_list multiboot_module_t;
 
-// my own
-#include "output.h"
-
-struct_description_t header_descriptor(multiboot_header_t* ptr);
-struct_description_t info_descriptor(multiboot_info_t* ptr); 
-struct_description_t memory_map_entry_descriptor(memory_map_entry_t* ptr);
 #endif

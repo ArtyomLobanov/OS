@@ -15,6 +15,9 @@
 #define LONG_LONG 9
 #define UNSIGNED_LONG_LONG 10
 
+#define COMMENT -1
+#define END -2
+
 struct Stream {
 	char* buffer;
 	int virtual_written;
@@ -88,15 +91,73 @@ void write_int(long long value, int radix, struct Stream* stream) {
 }
 
 int ptr_shift(int t) {
-	if (t == _DESCRIPTION_UCHAR || t == _DESCRIPTION_CHAR) return 1;
-	if (t == _DESCRIPTION_USHORT || t == _DESCRIPTION_SHORT) return 2;
-	if (t == _DESCRIPTION_UINT || t == _DESCRIPTION_INT) return 4;
-	if (t == _DESCRIPTION_ULONG || t == _DESCRIPTION_LONG || t == _DESCRIPTION_STRING) return 8;
+	if (t == UNSIGNED_CHAR || t == SIGNED_CHAR) return 1;
+	if (t == SHORT || t == UNSIGNED_SHORT) return 2;
+	if (t == LONG || t == UNSIGNED_LONG) return 4;
+	if (t == UNSIGNED_LONG_LONG || t == LONG_LONG || t == STRING) return 8;
 	return 0;
 }
 
-#define STRUCT_STYLE 0
-#define CLASS_STYLE 1
+
+int get_type(const char* field) {
+	if (begins_with(field, _D_UCHAR)) return UNSIGNED_CHAR;
+	if (begins_with(field, _D_CHAR)) return SIGNED_CHAR;
+	if (begins_with(field, _D_SHORT)) return SHORT;
+	if (begins_with(field, _D_USHORT)) return UNSIGNED_SHORT;
+	if (begins_with(field, _D_INT)) return LONG;
+	if (begins_with(field, _D_UINT)) return UNSIGNED_LONG;
+	if (begins_with(field, _D_LONG)) return LONG_LONG;
+	if (begins_with(field, _D_ULONG)) return UNSIGNED_LONG_LONG;
+	if (begins_with(field, _D_STRING)) return STRING;
+	if (begins_with(field, _D_COMMENT)) return COMMENT;
+	return END;
+}
+
+const char* get_name(const char* field) {
+	if (begins_with(field, _D_END)) return 0;
+	if (begins_with(field, _D_STRING)) return field+2;
+	if (begins_with(field, _D_COMMENT)) return field+2;
+	return field + 3;
+}
+
+char* write_field(char* internal_ptr, int template, const char* field, const char* prefix, struct Stream* stream) {
+	int type = get_type(field);
+	if (prefix == 0) {
+		return internal_ptr + ptr_shift(type);
+	}
+	write(prefix, stream);
+	write(get_name(field), stream);
+	if (type == COMMENT) {
+		if (template == CLASS_STYLE) write_char('\n', stream);
+		return internal_ptr;
+	}
+	write(template == CLASS_STYLE? " = " : "=", stream);
+	if (type == SIGNED_CHAR) {
+		write_int(*((signed char*) internal_ptr), 16, stream);
+	} else if (type == UNSIGNED_CHAR) {
+		write_uint(*((unsigned char*) internal_ptr), 16, stream);
+	} else if (type == SHORT) {
+		write_int(*((short*) internal_ptr), 16, stream);
+	} else if (type == UNSIGNED_SHORT) {
+		write_uint(*((unsigned short*) internal_ptr), 16, stream);
+	} else if (type == LONG) {
+		write_int(*((int*) internal_ptr), 16, stream);
+	} else if (type == UNSIGNED_LONG) {
+		write_uint(*((unsigned int*) internal_ptr), 16, stream);
+	} else if (type == LONG_LONG) {
+		write_int(*((long long*) internal_ptr), 16, stream);
+	} else if (type == UNSIGNED_LONG_LONG) {
+		write_uint(*((unsigned long long*) internal_ptr), 16, stream);
+	} else if (type == STRING) {
+		write_char('\"', stream);
+		unsigned long long addr = *((unsigned long long*) internal_ptr);
+		write((const char*) addr, stream);
+		write_char('\"', stream);
+	}
+	write(template == CLASS_STYLE? ";\n" : ",", stream);
+	return internal_ptr + ptr_shift(type);
+}
+
 void write_struct(struct_description_t *ptr, int template, struct Stream* stream) {
 	char* internal_ptr = (char*) ptr-> ptr;
 	write("Struct ", stream);
@@ -105,46 +166,10 @@ void write_struct(struct_description_t *ptr, int template, struct Stream* stream
 	write_uint((unsigned long long) ptr->ptr, 16, stream);
 	write(") {", stream);
 	if (template == CLASS_STYLE) write_char('\n', stream);
-	for (int i = 0; i < ptr->fields_counter; i++) {
-		int pr = (template == CLASS_STYLE? 8:1);
-		if (ptr->prefix != 0) pr = ptr->prefix(ptr->ptr, i);
-		if (pr < 0) {
-			internal_ptr += ptr_shift(ptr->types[i]);
-			continue;
-		}
-		for (int j = 0; j < pr; j++) {
-			write_char(' ', stream);
-		}
-		write(ptr->fields[i], stream);
-		if (ptr->types[i] != _DESCRIPTION_NOTHING)
-			write(template == CLASS_STYLE? " = " : "=", stream);
-		if (ptr->types[i] == _DESCRIPTION_CHAR) {
-			write_int(*((signed char*) internal_ptr), 16, stream);
-		} else if (ptr->types[i] == _DESCRIPTION_UCHAR) {
-			write_uint(*((unsigned char*) internal_ptr), 16, stream);
-		} else if (ptr->types[i] == _DESCRIPTION_SHORT) {
-			write_int(*((short*) internal_ptr), 16, stream);
-		} else if (ptr->types[i] == _DESCRIPTION_USHORT) {
-			write_uint(*((unsigned short*) internal_ptr), 16, stream);
-		} else if (ptr->types[i] == _DESCRIPTION_INT) {
-			write_int(*((int*) internal_ptr), 16, stream);
-		} else if (ptr->types[i] == _DESCRIPTION_UINT) {
-			write_uint(*((unsigned int*) internal_ptr), 16, stream);
-		} else if (ptr->types[i] == _DESCRIPTION_LONG) {
-			write_int(*((long long*) internal_ptr), 16, stream);
-		} else if (ptr->types[i] == _DESCRIPTION_ULONG) {
-			write_uint(*((unsigned long long*) internal_ptr), 16, stream);
-		} else if (ptr->types[i] == _DESCRIPTION_STRING) {
-			write("\"", stream);
-			unsigned long long addr = *((unsigned long long*) internal_ptr);
-			write((const char*) addr, stream);
-			write("\"", stream);
-		}
-		internal_ptr += ptr_shift(ptr->types[i]);
-		if (ptr->types[i] != _DESCRIPTION_NOTHING)
-			write_char(template == CLASS_STYLE? ';':',', stream);
-		if (template == CLASS_STYLE) write_char('\n', stream);
-
+	for (int i = 0;; i++) {
+		if (get_type(ptr->fields[i]) == END) break;
+		internal_ptr = write_field(internal_ptr, template, ptr->fields[i],
+				ptr->prefix(ptr->ptr, i, template), stream);	
 	}
 	write("}\n", stream);
 }
