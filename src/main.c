@@ -74,21 +74,23 @@ void general_allocator_test() {
 	printf("\n---------the end-------\n");
 }
 
+void init_paging();
+
 void main() {
 	cli_command();
+	init_paging();
 	idt_init();
 	PIC_init();
 	sti_command();
-	/*print_multiboot_header();
-	print_info_header();
-	printf("\n\n\n-------initial_memory_map is---------\n");
-	print_default_memory_map();
-	printf("\n\n\n-------new_memory_map is---------\n");*/
-	print_actual_memory_map();
+
+	//print_actual_memory_map();
+
+	//memory_alloc_test();
+
 	slab_alloc_test(4096);
 	slab_alloc_test(100);
+
 	general_allocator_test();
-	//memory_alloc_test();
-	//c++;
+
 	while (1);
 }
