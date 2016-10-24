@@ -141,6 +141,7 @@ setup_mapping:
 	movl $(bootstrap_pml4 - VIRTUAL_BASE), %edi
 	movl $(bootstrap_pml3 - VIRTUAL_BASE + PTE_PRESENT + PTE_WRITE), %eax
 	movl %eax, (%edi)
+	movl %eax, 2048(%edi)
 	movl %eax, 4088(%edi)
 
 	movl %cr4, %eax

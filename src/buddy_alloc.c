@@ -1,6 +1,7 @@
 #include "memory_map.h"
 #include "memory.h" //import PAGE_SIZE
 #include "output.h"
+#include "buddy_alloc.h"
 
 #define MAX_LEVEL 16
 #define MAX_NUMBER_OF_PAGES 50000
@@ -40,10 +41,10 @@ void remove(simple_buddy_alloc_t* ptr, int number) {
 void add(simple_buddy_alloc_t* ptr, int number) {
 	buddy_descriptor_t d = ptr->buffer[number];
 	d.prev_ptr = -1;
-	d.next_ptr = ptr->lists[d.level];
+	d.next_ptr = ptr->lists[get_level(d)];
 	if (d.next_ptr != -1) 
 		ptr->buffer[d.next_ptr].prev_ptr = number;
-	ptr->lists[d.level] = number;
+	ptr->lists[get_level(d)] = number;
 	ptr->buffer[number] = d;
 }
 
@@ -79,7 +80,7 @@ int alloc_block(simple_buddy_alloc_t* ptr, int level) {
 	while (not_empty_level > level) {
 		not_empty_level--;
 		int buddy_number = number ^ (1 << not_empty_level);
-		ptr->buffer[buddy_number].level ^= 1 << 7; // so it's free now
+		ptr->buffer[buddy_number].level = not_empty_level | (1 << 7); // so it's free now
 		add(ptr, buddy_number);
 	}
 	ptr->buffer[number].level = not_empty_level + (1 << 7);
@@ -141,7 +142,7 @@ unsigned long long get_free_pages_number(simple_buddy_alloc_t* ptr) {
 
 simple_buddy_alloc_t allocs[MAX_SIMPLE_BUDDY_ALLOC_NUMBER];
 int actual_size = 0;
-int init_flag = 0;
+static int init_flag = 0;
 
 void init_multy_buddy_alloc() {
 	if (init_flag) return;
