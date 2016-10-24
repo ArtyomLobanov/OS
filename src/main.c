@@ -74,15 +74,13 @@ void general_allocator_test() {
 	printf("\n---------the end-------\n");
 }
 
-void init_paging();
-
 void main() {
 	cli_command();
 	init_paging();
 	idt_init();
 	PIC_init();
 	sti_command();
-
+	
 	//print_actual_memory_map();
 
 	//memory_alloc_test();
